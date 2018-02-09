@@ -1,62 +1,12 @@
 const Alexa = require('alexa-sdk');
-const MTA = require('mta-gtfs');
+const myStops = require('./myStops');
 const TimeUtil = require('./timeUtil');
-const mtaApiKey = require('./secrets').mtaApiKey;
 
-/*
-MTA feed documentation: http://datamine.mta.info/feed-documentation
-List of MTA feeds: http://datamine.mta.info/list-of-feeds
-MTA GTFS interface: https://github.com/aamaliaa/mta-gtfs
-
-*/
-
-// Set up clients. Is this really how I have to do this?
-// 123456S
-let IRTBroadwayLex = new MTA({
-    key: mtaApiKey,
-    feed_id: 1
-});
-
-// ACE
-let IND8thAve = new MTA({
-    key: mtaApiKey,
-    feed_id: 26
-})
-
-// NQRW
-let BMTBroadway = new MTA({
-    key: mtaApiKey,
-    feed_id: 16
-})
-
-const STOPS = {
-    court: {
-        id: 'R28',
-        name: 'Court Street',
-        caller: BMTBroadway
-    },
-    high: {
-        id: 'A40',
-        name: 'High Street',
-        caller: IND8thAve
-    },
-    clark: {
-        id: '231',
-        name: 'Clark Street',
-        caller: IRTBroadwayLex
-    },
-    borough23: {
-        id: '232',
-        name: 'Borough Hall (2/3)',
-        caller: IRTBroadwayLex
-    },
-    borough45: {
-        id: '423',
-        name: 'Borough Hall (4/5)',
-        caller: IRTBroadwayLex
-    }
-}
-
+/**
+ * Calls the stop's feed to get the next arrivals
+ * @param  {object} stop a stop object
+ * @return {void}
+ */
 function getSchedule(stop) {
     // .schedule() apparently does not return the stop name
     // I could make another call for it but that's wasteful and time consuming
@@ -72,6 +22,11 @@ function getSchedule(stop) {
         });
 }
 
+/**
+ * Extracts the next three arrivals from the mta.stop() call
+ * @param  {object} data object containing stop data
+ * @return {object} object containing stop name and next three arrivals (north and south)
+ */
 function handleStopData(data) {
     let now = new Date();
 
@@ -113,11 +68,16 @@ function handleStopData(data) {
     return results;
 }
 
+/**
+ * Error callback for mta-gtfs
+ * @param  {error} error error passed from mta-gtfs
+ * @return {void}
+ */
 function handleStopError(error) {
     console.error(error);
 }
 
-getSchedule(STOPS.court);
+getSchedule(myStops.high);
 
 // Schedule response looks like this:
 /*
